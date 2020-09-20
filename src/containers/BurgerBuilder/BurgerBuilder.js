@@ -120,7 +120,7 @@ class BurgerBuilder extends Component {
 
   componentDidMount() {
     console.log('[BurgerBuilder.js] did mount');
-    axios.get("/ingredients").then((res) => {
+    axios.get("/ingredients.json").then((res) => {
       this.setState({ ingredients: res.data });
     }).catch(err => {});
   }
