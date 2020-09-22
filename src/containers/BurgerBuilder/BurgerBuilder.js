@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import Auxiliary from "../../hoc/Auxiliary/Auxiliary";
 import Burger from "../../components/Burger/Burger";
 import BuildControls from "../../components/Burger/BuildControls/BuildControls";
 import Modal from "../../components/UI/Modal/Modal";
@@ -16,16 +15,13 @@ const INGREDIENT_PRICES = {
 };
 
 class BurgerBuilder extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      ingredients: null,
-      totalPrice: 4,
-      purchasable: false,
-      purchasing: false,
-      loading: false,
-    };
-  }
+  state = {
+    ingredients: null,
+    totalPrice: 4,
+    purchasable: false,
+    purchasing: false,
+    loading: false,
+  };
 
   handleModalClose = () => {
     this.setState({ purchasing: false });
@@ -94,35 +90,30 @@ class BurgerBuilder extends Component {
   };
 
   handleContinuePurchasing = () => {
-    this.setState({ loading: true });
-    const order = {
-      ingredients: this.state.ingredients,
-      price: this.state.totalPrice,
-      customer: {
-        name: "Starea",
-        address: {
-          street: "NY",
-          zipCode: "123456",
-          country: "Vietnam",
-        },
-        email: "thinhle2199@gmail.com",
-      },
-    };
-    axios
-      .post("/orders.json", order)
-      .then((res) => {
-        this.setState({ loading: false, purchasing: false });
-      })
-      .catch((err) => {
-        this.setState({ loading: false, purchasing: false });
-      });
+    const queryParams = [];
+    for (let i in this.state.ingredients) {
+      queryParams.push(
+        encodeURIComponent(i) +
+          "=" +
+          encodeURIComponent(this.state.ingredients[i])
+      );
+    }
+    queryParams.push('price=' + this.state.totalPrice);
+    const queryString = queryParams.join("&");
+    this.props.history.push({
+      pathname: '/checkout',
+      search: "?" + queryString,
+    });
   };
 
   componentDidMount() {
-    console.log('[BurgerBuilder.js] did mount');
-    axios.get("/ingredients.json").then((res) => {
-      this.setState({ ingredients: res.data });
-    }).catch(err => {});
+    console.log("[BurgerBuilder.js] did mount");
+    axios
+      .get("/ingredients.json")
+      .then((res) => {
+        this.setState({ ingredients: res.data });
+      })
+      .catch((err) => {});
   }
 
   render() {
@@ -142,7 +133,7 @@ class BurgerBuilder extends Component {
 
     let burger = <Spinner />;
 
-    if(this.state.ingredients) {
+    if (this.state.ingredients) {
       orderSummary = (
         <OrderSummary
           totalPrice={this.state.totalPrice}
@@ -153,7 +144,7 @@ class BurgerBuilder extends Component {
       );
 
       burger = (
-        <Auxiliary>
+        <React.Fragment>
           <Burger ingredients={this.state.ingredients} />
           <BuildControls
             price={this.state.totalPrice}
@@ -163,7 +154,7 @@ class BurgerBuilder extends Component {
             purchasable={this.state.purchasable}
             onOrderButtonClick={this.handleOrderButtonClick}
           />
-        </Auxiliary>
+        </React.Fragment>
       );
     }
 
@@ -172,7 +163,7 @@ class BurgerBuilder extends Component {
     }
 
     return (
-      <Auxiliary>
+      <React.Fragment>
         <Modal
           onModalClosed={this.handleModalClose}
           show={this.state.purchasing}
@@ -180,7 +171,7 @@ class BurgerBuilder extends Component {
           {orderSummary}
         </Modal>
         {burger}
-      </Auxiliary>
+      </React.Fragment>
     );
   }
 }
