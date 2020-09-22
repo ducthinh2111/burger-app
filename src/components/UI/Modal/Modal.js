@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import classes from "./Modal.module.css";
+import Auxiliary from "../../../hoc/Auxiliary/Auxiliary";
 import Backdrop from "../Backdrop/Backdrop";
 
 const Modal = (props) => {
@@ -11,7 +12,7 @@ const Modal = (props) => {
   }, [props.show, props.children]);
 
   return (
-    <React.Fragment>
+    <Auxiliary>
       <Backdrop clicked={props.onModalClosed} show={props.show} />
       <div
         className={classes.Modal}
@@ -22,7 +23,7 @@ const Modal = (props) => {
       >
         {props.children}
       </div>
-    </React.Fragment>
+    </Auxiliary>
   );
 };
 
