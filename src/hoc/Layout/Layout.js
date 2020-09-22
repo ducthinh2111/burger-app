@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import Auxiliary from "../Auxiliary/Auxiliary";
 import classes from "./Layout.module.css";
 import Toolbar from "../../components/Navigation/Toolbar/Toolbar";
 import SideDrawer from "../../components/Navigation/SideDrawer/SideDrawer";
@@ -20,11 +19,11 @@ class Layout extends Component {
 
   render() {
     return (
-      <Auxiliary>
+      <React.Fragment>
         <Toolbar onSideDrawerOpen={this.handleSideDrawerOpen} />
         <SideDrawer open={this.state.showSideDrawer} onSideDrawerClose={this.handleSideDrawerClose} />
         <main className={classes.Content}>{this.props.children}</main>
-      </Auxiliary>
+      </React.Fragment>
     );
   }
 }
