@@ -15,7 +15,6 @@ const INGREDIENT_PRICES = {
 };
 
 class BurgerBuilder extends Component {
-  
   state = {
     ingredients: null,
     totalPrice: 4,
@@ -91,35 +90,30 @@ class BurgerBuilder extends Component {
   };
 
   handleContinuePurchasing = () => {
-    this.setState({ loading: true });
-    const order = {
-      ingredients: this.state.ingredients,
-      price: this.state.totalPrice,
-      customer: {
-        name: "Starea",
-        address: {
-          street: "NY",
-          zipCode: "123456",
-          country: "Vietnam",
-        },
-        email: "thinhle2199@gmail.com",
-      },
-    };
-    axios
-      .post("/orders.json", order)
-      .then((res) => {
-        this.setState({ loading: false, purchasing: false });
-      })
-      .catch((err) => {
-        this.setState({ loading: false, purchasing: false });
-      });
+    const queryParams = [];
+    for (let i in this.state.ingredients) {
+      queryParams.push(
+        encodeURIComponent(i) +
+          "=" +
+          encodeURIComponent(this.state.ingredients[i])
+      );
+    }
+    queryParams.push('price=' + this.state.totalPrice);
+    const queryString = queryParams.join("&");
+    this.props.history.push({
+      pathname: '/checkout',
+      search: "?" + queryString,
+    });
   };
 
   componentDidMount() {
-    console.log('[BurgerBuilder.js] did mount');
-    axios.get("/ingredients.json").then((res) => {
-      this.setState({ ingredients: res.data });
-    }).catch(err => {});
+    console.log("[BurgerBuilder.js] did mount");
+    axios
+      .get("/ingredients.json")
+      .then((res) => {
+        this.setState({ ingredients: res.data });
+      })
+      .catch((err) => {});
   }
 
   render() {
@@ -139,7 +133,7 @@ class BurgerBuilder extends Component {
 
     let burger = <Spinner />;
 
-    if(this.state.ingredients) {
+    if (this.state.ingredients) {
       orderSummary = (
         <OrderSummary
           totalPrice={this.state.totalPrice}
