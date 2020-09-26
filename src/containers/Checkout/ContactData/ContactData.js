@@ -1,10 +1,13 @@
 import React, { Component } from "react";
 import Button from "../../../components/UI/Button/Button";
 import classes from "./ContactData.module.css";
-import axios from "../../../axios-orders";
 import Spinner from "../../../components/UI/Spinner/Spinner";
 import Input from "../../../components/UI/Input/Input";
-import _ from "lodash";
+import produce from "immer";
+import { orderBurgerRefreshed, orderBurger } from "./ContactDataSlice";
+import { fetchIngredientsRefreshed } from "../../BurgerBuilder/burgerBuilderSlice";
+import { connect, batch } from "react-redux";
+import { unwrapResult } from "@reduxjs/toolkit";
 
 class ContactData extends Component {
   state = {
@@ -20,7 +23,7 @@ class ContactData extends Component {
           required: true,
         },
         valid: false,
-        touched: false
+        touched: false,
       },
       street: {
         elementType: "input",
@@ -33,7 +36,7 @@ class ContactData extends Component {
           required: true,
         },
         valid: false,
-        touched: false
+        touched: false,
       },
       zipCode: {
         elementType: "input",
@@ -45,10 +48,10 @@ class ContactData extends Component {
         validation: {
           required: true,
           minLength: 5,
-          maxLength: 5
+          maxLength: 5,
         },
         valid: false,
-        touched: false
+        touched: false,
       },
       country: {
         elementType: "input",
@@ -61,7 +64,7 @@ class ContactData extends Component {
           required: true,
         },
         valid: false,
-        touched: false
+        touched: false,
       },
       email: {
         elementType: "input",
@@ -74,7 +77,7 @@ class ContactData extends Component {
           required: true,
         },
         valid: false,
-        touched: false
+        touched: false,
       },
       deliveryMethod: {
         elementType: "select",
@@ -85,17 +88,15 @@ class ContactData extends Component {
           ],
         },
         value: "fastest",
-        valid: true
+        valid: true,
       },
     },
-    loading: false,
     validation: {},
-    formIsValid: false
+    formIsValid: false,
   };
 
-  handleOrder = (e) => {
+  handleOrder = async (e) => {
     e.preventDefault();
-    this.setState({ loading: true });
 
     const formData = {};
 
@@ -103,28 +104,29 @@ class ContactData extends Component {
       formData[e] = this.state.orderForm[e].value;
     }
 
-    console.log(formData);
-
     const order = {
       ingredients: this.props.ingredients,
       price: this.props.price,
       orderData: formData,
     };
-    axios
-      .post("/orders.json", order)
-      .then((res) => {
-        this.setState({ loading: false });
-        this.props.history.push("/");
-      })
-      .catch((err) => {
-        this.setState({ loading: false });
-      });
+    if (this.props.orderBurgerStatus === "idle") {
+      try {
+        const actionResult = await this.props.orderBurger(order);
+        unwrapResult(actionResult);
+        this.props.fetchIngredientsRefreshed();
+        this.props.history.replace("/");
+      } catch (err) {
+        console.error("Failed to order: ", err);
+      } finally {
+        this.props.orderBurgerRefreshed();
+      }
+    }
   };
 
   checkValidity = (value, rules) => {
     let isValid = true;
 
-    if(!rules) {
+    if (!rules) {
       return true;
     }
 
@@ -132,11 +134,11 @@ class ContactData extends Component {
       isValid = value.trim() !== "" && isValid;
     }
 
-    if(rules.minLength) {
+    if (rules.minLength) {
       isValid = value.length >= rules.minLength && isValid;
     }
 
-    if(rules.maxLength) {
+    if (rules.maxLength) {
       isValid = value.length <= rules.maxLength && isValid;
     }
 
@@ -144,22 +146,25 @@ class ContactData extends Component {
   };
 
   handleInputChange = (inputIdentifier, event) => {
-    const updatedOrderForm = _.cloneDeep(this.state.orderForm);
-    updatedOrderForm[inputIdentifier].value = event.target.value;
-    
-    updatedOrderForm[inputIdentifier].valid = this.checkValidity(
-      updatedOrderForm[inputIdentifier].value,
-      updatedOrderForm[inputIdentifier].validation
+    const isInputValid = this.checkValidity(
+      event.target.value,
+      this.state.orderForm[inputIdentifier].validation
     );
 
-    updatedOrderForm[inputIdentifier].touched = true;
+    const updatedOrderForm = produce(this.state.orderForm, (draft) => {
+      draft[inputIdentifier].value = event.target.value;
+      draft[inputIdentifier].valid = isInputValid;
+      draft[inputIdentifier].touched = true;
+    });
 
-    let formIsValid = true;
-    for(let input in updatedOrderForm) {
-      formIsValid = updatedOrderForm[input].valid && formIsValid;
-    }
+    const formIsValid = Object.keys(updatedOrderForm).reduce((isValid, e) => {
+      return updatedOrderForm[e].valid && isValid;
+    }, true);
 
-    this.setState({ orderForm: updatedOrderForm, formIsValid: formIsValid });
+    this.setState({
+      orderForm: updatedOrderForm,
+      formIsValid: formIsValid,
+    });
   };
 
   render() {
@@ -186,10 +191,12 @@ class ContactData extends Component {
             />
           );
         })}
-        <Button btnType="Success" disabled={!this.state.formIsValid}>ORDER</Button>
+        <Button btnType="Success" disabled={!this.state.formIsValid}>
+          ORDER
+        </Button>
       </form>
     );
-    if (this.state.loading) {
+    if (this.props.orderBurgerStatus === "loading") {
       form = <Spinner />;
     }
     return (
@@ -201,4 +208,18 @@ class ContactData extends Component {
   }
 }
 
-export default ContactData;
+const mapStateToProps = (state) => {
+  return {
+    orderBurgerStatus: state.contactData.orderBurgerStatus,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    orderBurgerRefreshed: () => dispatch(orderBurgerRefreshed()),
+    orderBurger: (order) => dispatch(orderBurger(order)),
+    fetchIngredientsRefreshed: () => dispatch(fetchIngredientsRefreshed()),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ContactData);
