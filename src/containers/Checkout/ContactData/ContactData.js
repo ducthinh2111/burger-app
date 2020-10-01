@@ -4,9 +4,9 @@ import classes from "./ContactData.module.css";
 import Spinner from "../../../components/UI/Spinner/Spinner";
 import Input from "../../../components/UI/Input/Input";
 import produce from "immer";
-import { orderBurgerRefreshed, orderBurger } from "./ContactDataSlice";
+import { orderBurger, orderBurgerRefreshed } from "./ContactDataSlice";
 import { fetchIngredientsRefreshed } from "../../BurgerBuilder/burgerBuilderSlice";
-import { connect, batch } from "react-redux";
+import { batch, connect } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
 
 class ContactData extends Component {
@@ -95,7 +95,7 @@ class ContactData extends Component {
     formIsValid: false,
   };
 
-  handleOrder = async (e) => {
+  handleOrder = (e) => {
     e.preventDefault();
 
     const formData = {};
@@ -109,18 +109,22 @@ class ContactData extends Component {
       price: this.props.price,
       orderData: formData,
     };
-    if (this.props.orderBurgerStatus === "idle") {
+    batch(async () => {
       try {
-        const actionResult = await this.props.orderBurger(order);
-        unwrapResult(actionResult);
+        const actionResult = await this.props.orderBurger(
+          order,
+          this.props.token
+        );
+        unwrapResult(actionResult); // !important (try-catch cannot work without this line)
         this.props.fetchIngredientsRefreshed();
         this.props.history.replace("/");
       } catch (err) {
-        console.error("Failed to order: ", err);
+        console.log(err);
+        alert(this.props.orderBurgerError);
       } finally {
         this.props.orderBurgerRefreshed();
       }
-    }
+    });
   };
 
   checkValidity = (value, rules) => {
@@ -177,17 +181,17 @@ class ContactData extends Component {
     }
     let form = (
       <form onSubmit={this.handleOrder}>
-        {formElementArray.map((f) => {
+        {formElementArray.map((formElement) => {
           return (
             <Input
-              key={f.id}
-              elementType={f.config.elementType}
-              elementConfig={f.config.elementConfig}
-              value={f.config.value}
-              onChange={this.handleInputChange.bind(this, f.id)}
-              invalid={!f.config.valid}
-              shouldValidate={f.config.validation}
-              touched={f.config.touched}
+              key={formElement.id}
+              elementType={formElement.config.elementType}
+              elementConfig={formElement.config.elementConfig}
+              value={formElement.config.value}
+              onChange={this.handleInputChange.bind(this, formElement.id)}
+              invalid={!formElement.config.valid}
+              shouldValidate={formElement.config.validation}
+              touched={formElement.config.touched}
             />
           );
         })}
@@ -211,14 +215,16 @@ class ContactData extends Component {
 const mapStateToProps = (state) => {
   return {
     orderBurgerStatus: state.contactData.orderBurgerStatus,
+    orderBurgerError: state.contactData.orderBurgerError,
+    token: state.auth.token,
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    orderBurgerRefreshed: () => dispatch(orderBurgerRefreshed()),
-    orderBurger: (order) => dispatch(orderBurger(order)),
+    orderBurger: (order, token) => dispatch(orderBurger({ order, token })),
     fetchIngredientsRefreshed: () => dispatch(fetchIngredientsRefreshed()),
+    orderBurgerRefreshed: () => dispatch(orderBurgerRefreshed()),
   };
 };
 
