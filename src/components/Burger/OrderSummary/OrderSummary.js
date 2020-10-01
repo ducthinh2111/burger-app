@@ -1,14 +1,7 @@
-import React, {useEffect} from "react";
+import React from "react";
 import Button from '../../UI/Button/Button';
 
 const OrderSummary = (props) => {
-
-  useEffect(() => {
-    console.log('[OrderSummary.js] components did mount/updated');
-    return () => {
-      console.log('[OrderSummary.js] Clear up components')
-    };
-  });
 
   const ingredientSummary = Object.keys(props.ingredients).map((key) => {
     return (
