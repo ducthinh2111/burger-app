@@ -95,7 +95,7 @@ class ContactData extends Component {
     formIsValid: false,
   };
 
-  handleOrder = async (e) => {
+  handleOrder = (e) => {
     e.preventDefault();
 
     const formData = {};
