@@ -29,9 +29,13 @@ const updatePurchaseState = (ingredients) => {
 
 export const fetchIngredients = createAsyncThunk(
   "burgerBuilder/fetchIngredients",
-  async () => {
-    const response = await axios.get("/ingredients.json");
-    return response.data;
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get("/ingredients.json");
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
   }
 );
 
@@ -40,10 +44,12 @@ const burgerBuilderSlice = createSlice({
   initialState,
   reducers: {
     purchaseStateUpdated(state) {
-      state.purchasable = updatePurchaseState(state.ingredients);
-      state.totalPrice = Object.keys(state.ingredients).reduce((price, e) => {
-        return (price += INGREDIENT_PRICES[e] * state.ingredients[e]);
-      }, 0);
+      if (state.ingredients) {
+        state.purchasable = updatePurchaseState(state.ingredients);
+        state.totalPrice = Object.keys(state.ingredients).reduce((price, e) => {
+          return (price += INGREDIENT_PRICES[e] * state.ingredients[e]);
+        }, 0);
+      }
     },
     ingredientAdded(state, action) {
       state.ingredients[action.payload.type]++;
@@ -59,9 +65,7 @@ const burgerBuilderSlice = createSlice({
     },
     fetchIngredientsRefreshed(state) {
       state.fetchIngredientsStatus = "idle";
-      state.ingredients = null;
-      state.totalPrice = 0;
-      state.purchasable = false;
+      state.fetchIngredientsError = null;
     },
   },
   extraReducers: {
@@ -70,11 +74,11 @@ const burgerBuilderSlice = createSlice({
     },
     [fetchIngredients.fulfilled]: (state, action) => {
       state.fetchIngredientsStatus = "succeeded";
-      state.ingredients = produce(action.payload, (draft) => {});
+      state.ingredients = produce(action.payload, (_) => {});
     },
     [fetchIngredients.rejected]: (state, action) => {
       state.fetchIngredientsStatus = "failed";
-      state.fetchIngredientsError = action.error.message;
+      state.fetchIngredientsError = action.payload;
     },
   },
 });

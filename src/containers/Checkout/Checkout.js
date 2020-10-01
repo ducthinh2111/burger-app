@@ -18,7 +18,7 @@ class Checkout extends Component {
 
     return (
       <div>
-        {this.props.ingredients && this.props.orderBurgerStatus !== 'failed' ? (
+        {this.props.ingredients ? (
           <React.Fragment>
             <CheckoutSummary
               onContinueClick={this.handleContinueClick}
@@ -37,7 +37,7 @@ class Checkout extends Component {
             />
           </React.Fragment>
         ) : (
-          <ErrorHandler error={this.props.orderBurgerError} />
+          <ErrorHandler error='There is no ingredients to check-out' />
         )}
       </div>
     );
@@ -48,8 +48,6 @@ const mapStateToProps = (state) => {
   return {
     ingredients: state.burgerBuilder.ingredients,
     totalPrice: state.burgerBuilder.totalPrice,
-    orderBurgerStatus: state.contactData.orderBurgerStatus,
-    orderBurgerError: state.contactData.orderBurgerError,
   };
 };
 

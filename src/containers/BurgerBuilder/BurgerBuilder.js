@@ -11,7 +11,6 @@ import {
   fetchIngredients,
   purchaseStateUpdated,
 } from "./burgerBuilderSlice";
-import { orderBurgerRefreshed } from "../Checkout/ContactData/ContactDataSlice";
 import { connect, batch } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
 
@@ -25,7 +24,11 @@ class BurgerBuilder extends Component {
   };
 
   handleOrderButtonClick = () => {
-    this.setState({ purchasing: true });
+    if (this.props.isAuthenticated) {
+      this.setState({ purchasing: true });
+    } else {
+      this.props.history.push("/auth");
+    }
   };
 
   handleModalClose = () => {
@@ -41,10 +44,24 @@ class BurgerBuilder extends Component {
       batch(async () => {
         try {
           const actionResult = await this.props.fetchIngredients();
-          unwrapResult(actionResult);
+          unwrapResult(actionResult); // !important (try-catch cannot work without this line)
           this.props.purchaseStateUpdated();
         } catch (err) {
-          console.log("Failed to fetch ingredients: ", err);
+          console.log(err);
+        }
+      });
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.location.key !== this.props.location.key) {
+      batch(async () => {
+        try {
+          const actionResult = await this.props.fetchIngredients();
+          unwrapResult(actionResult); // !important (try-catch cannot work without this line)
+          this.props.purchaseStateUpdated();
+        } catch (err) {
+          console.log(err);
         }
       });
     }
@@ -78,6 +95,7 @@ class BurgerBuilder extends Component {
             onAddIngredient={(type) => this.props.ingredientAdded(type)}
             purchasable={this.props.purchasable}
             onOrderButtonClick={this.handleOrderButtonClick}
+            isAuth={this.props.isAuthenticated}
           />
         </React.Fragment>
       );
@@ -115,6 +133,7 @@ const mapStateToProps = (state) => {
     fetchIngredientsStatus: state.burgerBuilder.fetchIngredientsStatus,
     fetchIngredientsError: state.burgerBuilder.fetchIngredientsError,
     purchasable: state.burgerBuilder.purchasable,
+    isAuthenticated: state.auth.token !== null,
   };
 };
 
@@ -124,7 +143,6 @@ const mapDispatchToProps = (dispatch) => {
     ingredientRemoved: (type) => dispatch(ingredientRemoved({ type })),
     fetchIngredients: () => dispatch(fetchIngredients()),
     purchaseStateUpdated: () => dispatch(purchaseStateUpdated()),
-    orderBurgerRefreshed: () => dispatch(orderBurgerRefreshed()),
   };
 };
 

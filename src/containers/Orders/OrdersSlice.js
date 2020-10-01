@@ -15,22 +15,30 @@ const initialState = orderAdapter.getInitialState({
   fetchOrdersError: null,
 });
 
-export const fetchOrders = createAsyncThunk("orders/fetchOrders", async () => {
-  const res = await axios.get("/orders.json");
-  const fetchedOrders = Object.keys(res.data).map((key) => {
-    return { id: key, ...res.data[key] };
-  });
-  const normalized = normalize(fetchedOrders, [orderEntity]);
-  console.log(normalized);
-  return normalized.entities;
-});
+export const fetchOrders = createAsyncThunk(
+  "orders/fetchOrders",
+  async ({ token }, { rejectWithValue }) => {
+    try {
+      const res = await axios.get("/orders.json?auth=" + token);
+      const fetchedOrders = Object.keys(res.data).map((key) => {
+        return { id: key, ...res.data[key] };
+      });
+      const normalized = normalize(fetchedOrders, [orderEntity]);
+      console.log(normalized);
+      return normalized.entities;
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
 
 const ordersSlice = createSlice({
   name: "orders",
   initialState,
   reducers: {
-    fetchOrdersRefreshed(state) {
+    fetchOrdersRefreshed(state, action) {
       state.fetchOrdersStatus = "idle";
+      state.fetchOrdersError = null;
     },
   },
   extraReducers: {
@@ -43,7 +51,7 @@ const ordersSlice = createSlice({
     },
     [fetchOrders.rejected]: (state, action) => {
       state.fetchOrdersStatus = "failed";
-      state.fetchOrdersError = action.error.message;
+      state.fetchOrdersError = action.payload;
     },
   },
 });
