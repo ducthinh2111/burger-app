@@ -6,21 +6,20 @@ import Backdrop from "../../UI/Backdrop/Backdrop";
 import Auxiliary from "../../../hoc/Auxiliary/Auxiliary";
 
 const sideDrawer = (props) => {
-
   let attachedClasses = [classes.SideDrawer, classes.Close];
-  if(props.open) {
+  if (props.open) {
     attachedClasses = [classes.SideDrawer, classes.Open];
   }
 
   return (
     <Auxiliary>
       <Backdrop clicked={props.onSideDrawerClose} show={props.open} />
-      <div className={attachedClasses.join(' ')}>
+      <div className={attachedClasses.join(" ")}>
         <div className={classes.Logo}>
           <Logo />
         </div>
         <nav>
-          <NavigationItems />
+          <NavigationItems isAuthenticated={props.isAuth} />
         </nav>
       </div>
     </Auxiliary>

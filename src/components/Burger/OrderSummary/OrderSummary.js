@@ -1,15 +1,7 @@
-import React, {useEffect} from "react";
-import Auxiliary from "../../../hoc/Auxiliary/Auxiliary";
+import React from "react";
 import Button from '../../UI/Button/Button';
 
 const OrderSummary = (props) => {
-
-  useEffect(() => {
-    console.log('[OrderSummary.js] components did mount/updated');
-    return () => {
-      console.log('[OrderSummary.js] Clear up components')
-    };
-  });
 
   const ingredientSummary = Object.keys(props.ingredients).map((key) => {
     return (
@@ -21,7 +13,7 @@ const OrderSummary = (props) => {
   });
 
   return (
-    <Auxiliary>
+    <React.Fragment>
       <h3>Your Order</h3>
       <p>A delicious burger with the following ingredients:</p>
       <ul>
@@ -31,7 +23,7 @@ const OrderSummary = (props) => {
       <p>Continue to checkout?</p>
       <Button onClick={props.onModalClosed} btnType="Danger">CANCEL</Button>
       <Button onClick={props.onContinuePurchasing} btnType="Success">CONTINUE</Button>
-    </Auxiliary>
+    </React.Fragment>
   );
 };
 

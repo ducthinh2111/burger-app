@@ -1,15 +1,9 @@
-import React, { useEffect } from "react";
+import React from "react";
 import classes from "./Modal.module.css";
 import Auxiliary from "../../../hoc/Auxiliary/Auxiliary";
 import Backdrop from "../Backdrop/Backdrop";
 
 const Modal = (props) => {
-  useEffect(() => {
-    console.log("[Modal.js] components did mount/updated");
-    return () => {
-      console.log("[Modal.js] Clear up components");
-    };
-  }, [props.show, props.children]);
 
   return (
     <Auxiliary>
