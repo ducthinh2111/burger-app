@@ -1,5 +1,5 @@
 import React, { Component, Suspense } from "react";
-import { Redirect, Route, Switch, withRouter } from "react-router-dom";
+import { Redirect, Route, Switch } from "react-router-dom";
 import { connect } from "react-redux";
 import { authCheck } from "./containers/Auth/AuthSlice";
 import { unwrapResult } from "@reduxjs/toolkit";
